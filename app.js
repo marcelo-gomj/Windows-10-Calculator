@@ -18,13 +18,22 @@ function getMemory(value){
 }
 
 function addItemMemory(digit, value){
+
     if(digit === ','){
         if(!value.includes('.')) getMemory(value + '.');
-    }else if(value == '0'){
-        if(digit != '0') getMemory(digit);
+
+    }else if(value == '+0'){
+        if(digit != '+0') getMemory('+' + digit);
+
+    }else if(digit === '+/-'){
+        const signal = value[0] === '+' ? '-' : '+';
+        getMemory(value.replace(value[0], signal))
+
     }else{
         getMemory(value + digit);
     }  
+
+    console.log(value)
 }
 
 function formatNumberFinal(){
@@ -52,6 +61,6 @@ function insertNumber(btns){
 }
 
 localStorage.clear('value');
-getMemory('0');
+getMemory('+0');
 insertNumber(query('.btn-number', false));
 
