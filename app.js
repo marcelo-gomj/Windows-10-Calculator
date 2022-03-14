@@ -10,28 +10,29 @@ function innerHtml(output, set = true){
 }
 
 function getMemory(value){
-    value === undefined ? localStorage.setItem('value' , value) :
-    localStorage.getItem('value')
+    if(value){
+        localStorage.setItem('value', value);
+    }else{
+        return localStorage.getItem('value');
+    }
 }
 
-function displayItem(digit, value, setValue){
-    const strValue = String(value)
+function addItemMemory(digit, value){
     if(digit === ','){
-        if(!strValue.includes('.')) getMemory(value + '.')
-        console.log(getMemory());
+        if(!value.includes('.')) getMemory(value + '.');
     }else if(value == '0'){
-        if(digit != '0') setValue('.', true);
+        if(digit != '0') getMemory(digit);
     }else{
-        localStorage.setItem('value', digit)
+        getMemory(value + digit);
     }  
 }
 
-function formatNumberFinal(valFinal){
-    if(valFinal.includes(',')){
-        return valFinal.split(',')
-    }
+function formatNumberFinal(){
+    const valors = getMemory().split('.');
+    const integer = Intl.NumberFormat().format(valors[0]);
+    const float = (valors.length > 1 ? ',' + valors[1] : '');
 
-    return valFinal
+    return integer + float;
 }
 
 function insertNumber(btns){
@@ -39,16 +40,18 @@ function insertNumber(btns){
     
     btns.addEventListener('click', (event) => {
         const value = getMemory();
-        const setValue = innerHtml(output, false);
-        const digit = innerHtml(event.target)
+        const digit = innerHtml(event.target);
 
-        displayItem(digit, value, setValue);
-
-        const formated = formatNumberFinal(value);
-        setValue(formated, true);
+        addItemMemory(digit, value);
+        
+        const setOutput = innerHtml(output, false);
+        const formatedNumber = formatNumberFinal();
+        setOutput(formatedNumber, true);
     })
     
 }
 
-getMemory(0);
+localStorage.clear('value');
+getMemory('0');
 insertNumber(query('.btn-number', false));
+
