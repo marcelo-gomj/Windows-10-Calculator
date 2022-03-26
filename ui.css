@@ -21,6 +21,7 @@ body{
     display: block;
     position: relative;
     width: 30%;
+    min-width: 350px;
     height: 90vh;
     margin: 0 auto;
     color: white;

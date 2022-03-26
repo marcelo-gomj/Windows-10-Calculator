@@ -3,9 +3,9 @@ function query(ele, all = true) {
 }
 
 function innerHtml(output, set = true){
-    if(set) return output.innerHTML
+    if(set) return output.innerHTML;
     else return (digit, clear = false) => {
-        !clear ? output.innerHTML += digit : output.innerHTML = digit
+        !clear ? output.innerHTML += digit : output.innerHTML = digit;
     }
 }
 
@@ -29,7 +29,7 @@ function addItemMemory(digit, value){
     
         }else if(digit === '+/-'){
             const signal = value[0] === '+' ? '-' : '+';
-            return (value.replace(value[0], signal))
+            return (value.replace(value[0], signal));
     
         }else{
             return (value + digit);
@@ -40,14 +40,17 @@ function addItemMemory(digit, value){
 }
 
 // add points in numbers
-function formatNumberFinal(value, output){
+function updateDisplayOutput(value, output){
+    if(value.length > 17) return;
+
     const valors = value.split('.');
     const integer = Intl.NumberFormat().format(valors[0]);
     const float = (valors.length > 1 ? ',' + valors[1] : '');
 
     output.style.fontSize = reponsiveOutput(valors.join('').length);
 
-    return integer + float;
+    const result = (integer + float);
+    innerHtml(output, false)(result, true);
 }
 
 // flexiblity the numbers in main display
@@ -62,7 +65,7 @@ function reponsiveOutput(length){
 }
 
 // return the results of operations mathematics
-function setSysOperation(str1, str2, opertation){
+function calcOperation(str1, str2, opertation){
     const val2 = Number(str1);
     const val1 = Number(str2);
     switch(opertation){
@@ -75,84 +78,109 @@ function setSysOperation(str1, str2, opertation){
         case '+' :
             return val1 + val2;
         default:
-            return 'Error'
+            return 'Error';
     }
 }
 
 // insert numbers 
-function insertNumber(btn, output){
-    const getMemory = localMemory('value');    
-    const value = getMemory();
+function insertNumber(btn, output, miniInfo){
+    const getMemory = localMemory('value'); 
+    const operation = localMemory('method');
 
+    if(operation() === '='){
+        clearMemoryAll('value', 'value2', 'method')
+        innerHtml(miniInfo, false)('', true)
+    }
+
+    const value = getMemory();
     getMemory(addItemMemory(btn, value));
 
     const updateVal = getMemory();
-    const formatedNumber = formatNumberFinal(updateVal, output);
+    updateDisplayOutput(updateVal, output);
+}
 
-    const setOutput = innerHtml(output, false);
-    setOutput(formatedNumber, true);
+function buttonDeleteDigit(setValue){    
+    const value = setValue();
+    setValue(value.slice(0, (value.length - 1) ));
+
+    const updatedVal = setValue()
+    if(updatedVal.length === 1) setValue(updatedVal + '0' );
 }
 
 // make operations mathematics
-function setOperationMethods(btn, miniInfo){
+function setOperationMethods(btn, output, miniInfo){
     const firstValue = localMemory('value');
     const secondValue = localMemory('value2');
-    const method = localMemory('method');
+    const operation = localMemory('method');
+    const setMiniInfo = innerHtml(miniInfo, false);
 
-    const oldFirstValue = firstValue();
-
-    if( btn.length > 3 ){
-        firstValue(oldFirstValue.slice(0, (oldFirstValue.length -1)))
-        console.log(firstValue())
-
+    if(btn.length > 3){
+        buttonDeleteDigit(firstValue);
+        updateDisplayOutput(firstValue(), output);
     }else{
-        const operation = method();
-        const setMiniInfo = innerHtml(miniInfo, false);
-
-        if( operation === '0' ){
-            secondValue(firstValue());
+        const getResult = () => calcOperation(firstValue(), secondValue(), operation());
+        const method = operation();
+        const value = firstValue();
+        
+        if( method === '0' || method === '='){
+            secondValue(value);
             firstValue('+0');
-    
-            method(btn);
-    
-            const miniValue = Number(secondValue()) + ' ' + btn
-            setMiniInfo(miniValue, true);
-    
-        }else{
-            const result = setSysOperation(firstValue(), secondValue(), method())
-            firstValue(result);
-            clearMemory('value2', true)
-            clearMemory('method', true)
+            operation(btn);
+
+            setMiniInfo(`${Number(value)} ${btn}`, true);
+        } else {
             
-            if(btn === '=') setMiniInfo(` ${Number(oldFirstValue)} ${btn}`);
+            if(btn !== '=' && value !== '+'){
+                const result = getResult();
+                firstValue(result);
+                updateDisplayOutput(String(result), output);  
+
+                firstValue('+');
+                secondValue(result);
+            }
+
+            setMiniInfo(`${secondValue()} ${btn}`, true);
+            
+            if(btn === '='){
+                const result = getResult();
+                setMiniInfo(`${Number(secondValue())} ${operation()} ${Number(firstValue())} =`, true); 
+                updateDisplayOutput(String(result), output); 
+                
+                firstValue(result);
+            }
+
+            operation(btn);
         }
+
     }
 
-    const output = query('.output', false);
-    innerHtml(output, false)(formatNumberFinal(firstValue().toString(), output), true);     
 }
 
 function setExtraOptions(option, output, miniInfo){
     const cleanResult = innerHtml(output, false);
-    const cleanMiniInfo = innerHtml(miniInfo, false);
+    const clearMiniInfo = innerHtml(miniInfo, false);
 
     switch(option){
         case 'C':
             clearMemoryAll('value', 'value2', 'method'); 
             cleanResult('0', true);
-            cleanMiniInfo('', true);
+            clearMiniInfo('', true);
         break;
         case 'CE':
             clearMemoryAll('value');
+
+            if(localMemory('method')() === '0'){
+                clearMiniInfo('', true);
+            }
+
             cleanResult('0', true);
         break;
-
     }
 }
 
 // Listen cliks on buttons
 function listenClickButton(buttonsHtml, action, ...rest){
-    const buttons = [...buttonsHtml]
+    const buttons = [...buttonsHtml];
 
     buttons.map((btn) =>{
         btn.addEventListener('click', (event) => {
@@ -172,7 +200,7 @@ function clearMemoryAll(...local){
 }
 
 // when starting clean the localStorage
-clearMemoryAll('value', 'value2', 'method');
+clearMemoryAll('value', 'value2', 'method', 'history');
 
 // Clicks on buttons 
 (function (){
@@ -185,10 +213,10 @@ clearMemoryAll('value', 'value2', 'method');
         
         switch(index){
             case 0:
-                listenClickButton(buttons, insertNumber, output);
+                listenClickButton(buttons, insertNumber, output, miniInfo);
                 break
             case 1:
-                listenClickButton(buttons, setOperationMethods, miniInfo);
+                listenClickButton(buttons, setOperationMethods, output, miniInfo);
                 break;
             case 2: 
                 listenClickButton(buttons, setExtraOptions, output, miniInfo);
