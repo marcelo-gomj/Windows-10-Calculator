@@ -41,7 +41,7 @@ function addItemMemory(digit, value){
 
 // add points in numbers
 function updateDisplayOutput(value, output){
-    if(value.length > 17) return;
+    // if(value.length > 17) return;
 
     const valors = value.split('.');
     const integer = Intl.NumberFormat().format(valors[0]);
