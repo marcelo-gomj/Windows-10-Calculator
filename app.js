@@ -2,8 +2,8 @@ function query(ele, all = true) {
     return all ? document.querySelectorAll(ele) : document.querySelector(ele); 
 }
 
-function innerHtml(output, set = true){
-    if(set) return output.innerHTML;
+function innerHtml(output, get = true){
+    if(get) return output.innerHTML;
     else return (digit, clear = false) => {
         !clear ? output.innerHTML += digit : output.innerHTML = digit;
     }
@@ -19,6 +19,13 @@ function localMemory(key){
     }
 }
 
+const firstValue = localMemory('value');
+
+const secondValue = localMemory('value2');
+
+const operation = localMemory('method');
+
+// get inputs number
 function addItemMemory(digit, value){
     if(value.length < 17){
         if(digit === ','){
@@ -41,8 +48,6 @@ function addItemMemory(digit, value){
 
 // add points in numbers
 function updateDisplayOutput(value, output){
-    // if(value.length > 17) return;
-
     const valors = value.split('.');
     const integer = Intl.NumberFormat().format(valors[0]);
     const float = (valors.length > 1 ? ',' + valors[1] : '');
@@ -65,10 +70,11 @@ function reponsiveOutput(length){
 }
 
 // return the results of operations mathematics
-function calcOperation(str1, str2, opertation){
-    const val2 = Number(str1);
-    const val1 = Number(str2);
-    switch(opertation){
+function calcOperation(){
+    const val2 = Number(firstValue());
+    const val1 = Number(secondValue());
+
+    switch(operation()){
         case 'x':
             return val1 * val2 ;
         case '÷':
@@ -84,18 +90,15 @@ function calcOperation(str1, str2, opertation){
 
 // insert numbers 
 function insertNumber(btn, output, miniInfo){
-    const getMemory = localMemory('value'); 
-    const operation = localMemory('method');
-
     if(operation() === '='){
         clearMemoryAll('value', 'value2', 'method')
         innerHtml(miniInfo, false)('', true)
     }
 
-    const value = getMemory();
-    getMemory(addItemMemory(btn, value));
+    const value = firstValue();
+    firstValue(addItemMemory(btn, value));
 
-    const updateVal = getMemory();
+    const updateVal = firstValue();
     updateDisplayOutput(updateVal, output);
 }
 
@@ -104,21 +107,62 @@ function buttonDeleteDigit(setValue){
     setValue(value.slice(0, (value.length - 1) ));
 
     const updatedVal = setValue()
-    if(updatedVal.length === 1) setValue(updatedVal + '0' );
+    if(updatedVal.length === 1) setValue(updatedVal + '0');
+}
+
+function handleClickHistory(){
+
+}
+
+function updateHistoryList(histories, container){
+    const list = histories.reverse();
+    const elements = list.map(item => {
+        const result = item.split(' ');
+        const path = result.slice(0, result.length -1);
+        const li = document.createElement('li');
+
+        li.innerHTML = `${path.join(' ')}<div>${result.slice(-1)}</div>`;
+
+        return li
+    })
+
+    container.innerHTML = '';
+    elements.map((li, index) => {
+        li.addEventListener('click', () => handleClickHistory(list[index]))
+        container.appendChild(li);
+    });
+}
+
+// function for sava data in memory
+function saveResultsMemory(result){
+    const setHistory = localMemory('history');
+    const local = { memory : [] };
+    let datas = JSON.parse(setHistory()).memory || local.memory;
+
+    if(result){
+        if(datas.length < 20){
+            datas.push(result); 
+        }else{
+            datas = datas.slice(1);
+            datas.push(result);
+        }
+
+        local.memory = datas;
+        setHistory(JSON.stringify(local));
+        updateHistoryList(local.memory, query('.history', false))
+    }
+
+    return (index) => datas[index];
 }
 
 // make operations mathematics
 function setOperationMethods(btn, output, miniInfo){
-    const firstValue = localMemory('value');
-    const secondValue = localMemory('value2');
-    const operation = localMemory('method');
     const setMiniInfo = innerHtml(miniInfo, false);
 
     if(btn.length > 3){
         buttonDeleteDigit(firstValue);
         updateDisplayOutput(firstValue(), output);
     }else{
-        const getResult = () => calcOperation(firstValue(), secondValue(), operation());
         const method = operation();
         const value = firstValue();
         
@@ -131,21 +175,25 @@ function setOperationMethods(btn, output, miniInfo){
         } else {
             
             if(btn !== '=' && value !== '+'){
-                const result = getResult();
+                const result = calcOperation();
                 firstValue(result);
                 updateDisplayOutput(String(result), output);  
 
                 firstValue('+');
                 secondValue(result);
+
             }
 
             setMiniInfo(`${secondValue()} ${btn}`, true);
             
             if(btn === '='){
-                const result = getResult();
-                setMiniInfo(`${Number(secondValue())} ${operation()} ${Number(firstValue())} =`, true); 
-                updateDisplayOutput(String(result), output); 
+                const result = calcOperation();
+                const concatedRes = `${Number(secondValue())} ${operation()} ${Number(firstValue())} =`;
                 
+                setMiniInfo(concatedRes, true); 
+                updateDisplayOutput(String(result), output); 
+
+                saveResultsMemory(concatedRes + ' ' + result);
                 firstValue(result);
             }
 
@@ -169,7 +217,7 @@ function setExtraOptions(option, output, miniInfo){
         case 'CE':
             clearMemoryAll('value');
 
-            if(localMemory('method')() === '0'){
+            if(operation() === '0'){
                 clearMiniInfo('', true);
             }
 
@@ -209,7 +257,7 @@ clearMemoryAll('value', 'value2', 'method', 'history');
 
     ['.btn-number', '.btn-options', '.btn-extra', '.memory']
     .map((btn, index) => {
-        const buttons = query(btn);
+        const buttons = query(btn + ' li');
         
         switch(index){
             case 0:
@@ -227,4 +275,15 @@ clearMemoryAll('value', 'value2', 'method', 'history');
         }
     })
 })()
+
+!function handleCloseMemory(){
+    const container = query('.history', false);
+    const btnHistory = query('.t-history', false);
+    
+    btnHistory.addEventListener('click', () => 
+    container.classList.toggle('history-active'))
+}()
+
+
+
 

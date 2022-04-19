@@ -231,3 +231,41 @@ header{
 .btn-options li:first-child svg{
     width: 1.2rem;
 }
+
+.history{
+    display: none;
+    background: rgb(31, 31, 31);
+    height: 62%;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+
+    flex-direction: column;
+    overflow-y: scroll;
+    padding: 4% 2%;
+}
+
+.history li{
+    background: var(--color-normal);
+    text-align: right;
+    font-size: 0.9rem;
+    padding: 5% 2%;
+    cursor: pointer;
+    color: silver;
+}
+
+.history div{
+    color: white!important;
+    font-weight: 500!important;
+    font-size: 1.1rem;
+    padding-top: 1.2%;
+}
+
+.history li:hover{
+    background: var(--color-hover);
+}
+
+.history-active{
+    display: flex;
+}
