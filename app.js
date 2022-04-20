@@ -47,7 +47,8 @@ function addItemMemory(digit, value){
 }
 
 // add points in numbers
-function updateDisplayOutput(value, output){
+function updateDisplayOutput(value){
+    const output = query('.output', false);
     const valors = value.split('.');
     const integer = Intl.NumberFormat().format(valors[0]);
     const float = (valors.length > 1 ? ',' + valors[1] : '');
@@ -56,6 +57,11 @@ function updateDisplayOutput(value, output){
 
     const result = (integer + float);
     innerHtml(output, false)(result, true);
+}
+
+function updateMiniInfo(infos, clean){
+    const miniInfo = query('.info-display', false)
+    innerHtml(miniInfo, false)(infos, clean);
 }
 
 // flexiblity the numbers in main display
@@ -110,91 +116,88 @@ function buttonDeleteDigit(setValue){
     if(updatedVal.length === 1) setValue(updatedVal + '0');
 }
 
-function handleClickHistory(){
-
-}
-
 function updateHistoryList(histories, container){
-    const list = histories.reverse();
-    const elements = list.map(item => {
-        const result = item.split(' ');
-        const path = result.slice(0, result.length -1);
+    container.innerHTML = '';
+
+    histories.reverse().map(item => {
+        const { path, result } = item;
         const li = document.createElement('li');
 
-        li.innerHTML = `${path.join(' ')}<div>${result.slice(-1)}</div>`;
+        li.innerHTML = `${path}<div>${result}</div>`;
+        
+        li.addEventListener('click', () =>{ 
+            firstValue(result);
+            updateMiniInfo(path, true);
+            updateDisplayOutput(String(result));
+        });
 
-        return li
-    })
-
-    container.innerHTML = '';
-    elements.map((li, index) => {
-        li.addEventListener('click', () => handleClickHistory(list[index]))
         container.appendChild(li);
-    });
+    })
 }
 
 // function for sava data in memory
-function saveResultsMemory(result){
+function saveResultsMemory(path, result){
     const setHistory = localMemory('history');
     const local = { memory : [] };
     let datas = JSON.parse(setHistory()).memory || local.memory;
+    
+    const pushItems = () => datas.push({path, result});
 
-    if(result){
+    if(result && path){
         if(datas.length < 20){
-            datas.push(result); 
+            pushItems()
         }else{
             datas = datas.slice(1);
-            datas.push(result);
+            pushItems()
         }
 
         local.memory = datas;
         setHistory(JSON.stringify(local));
         updateHistoryList(local.memory, query('.history', false))
     }
-
-    return (index) => datas[index];
 }
 
 // make operations mathematics
-function setOperationMethods(btn, output, miniInfo){
-    const setMiniInfo = innerHtml(miniInfo, false);
-
+function setOperationMethods(btn){
     if(btn.length > 3){
         buttonDeleteDigit(firstValue);
-        updateDisplayOutput(firstValue(), output);
+        updateDisplayOutput(firstValue());
     }else{
         const method = operation();
         const value = firstValue();
         
-        if( method === '0' || method === '='){
+        if( method === '0' || method === '=' ){
             secondValue(value);
             firstValue('+0');
             operation(btn);
 
-            setMiniInfo(`${Number(value)} ${btn}`, true);
+            updateMiniInfo(`${Number(value)} ${btn}`, true);
         } else {
+            let result, path;
             
             if(btn !== '=' && value !== '+'){
-                const result = calcOperation();
+                result = calcOperation();
+                path = `${value} ${btn} ${Number(secondValue())} = `
+
                 firstValue(result);
-                updateDisplayOutput(String(result), output);  
 
                 firstValue('+');
                 secondValue(result);
-
             }
 
-            setMiniInfo(`${secondValue()} ${btn}`, true);
+            updateMiniInfo(`${Number(secondValue())} ${btn}`, true);
             
             if(btn === '='){
-                const result = calcOperation();
-                const concatedRes = `${Number(secondValue())} ${operation()} ${Number(firstValue())} =`;
+                result = calcOperation();
+                path = `${Number(secondValue())} ${operation()} ${Number(firstValue())} = `;
                 
-                setMiniInfo(concatedRes, true); 
-                updateDisplayOutput(String(result), output); 
-
-                saveResultsMemory(concatedRes + ' ' + result);
+                updateMiniInfo(path, true); 
                 firstValue(result);
+            }
+
+            if(result && path){
+                saveResultsMemory(path, result);
+                updateDisplayOutput(String(result));
             }
 
             operation(btn);
@@ -276,6 +279,8 @@ clearMemoryAll('value', 'value2', 'method', 'history');
     })
 })()
 
+
+// show and hide history
 !function handleCloseMemory(){
     const container = query('.history', false);
     const btnHistory = query('.t-history', false);
@@ -283,7 +288,3 @@ clearMemoryAll('value', 'value2', 'method', 'history');
     btnHistory.addEventListener('click', () => 
     container.classList.toggle('history-active'))
 }()
-
-
-
-
