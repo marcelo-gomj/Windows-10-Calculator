@@ -1,5 +1,7 @@
-function query(ele, all = true) {
-    return all ? document.querySelectorAll(ele) : document.querySelector(ele); 
+function query(className) {
+    const elements = document.querySelectorAll(className);
+
+    return elements.length === 1 ? elements[0] : elements
 }
 
 function innerHtml(output, get = true){
@@ -105,7 +107,7 @@ function insertNumber(btn, output, miniInfo){
     firstValue(addItemMemory(btn, value));
 
     const updateVal = firstValue();
-    updateDisplayOutput(updateVal, output);
+    updateDisplayOutput(updateVal);
 }
 
 function buttonDeleteDigit(setValue){    
@@ -177,7 +179,7 @@ function setOperationMethods(btn){
             
             if(btn !== '=' && value !== '+'){
                 result = calcOperation();
-                path = `${value} ${btn} ${Number(secondValue())} = `
+                path = `${Number(value)} ${btn} ${Number(secondValue())} = `
 
                 firstValue(result);
 
