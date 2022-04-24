@@ -1,7 +1,7 @@
 function query(className) {
     const elements = document.querySelectorAll(className);
 
-    return elements.length === 1 ? elements[0] : elements
+    return elements.length === 1 ? elements[0] : [...elements]
 }
 
 function innerHtml(output, get = true){
@@ -26,6 +26,8 @@ const firstValue = localMemory('value');
 const secondValue = localMemory('value2');
 
 const operation = localMemory('method');
+
+const setHistory = localMemory('history');
 
 // get inputs number
 function addItemMemory(digit, value){
@@ -139,7 +141,6 @@ function updateHistoryList(histories, container){
 
 // function for sava data in memory
 function saveResultsMemory(path, result){
-    const setHistory = localMemory('history');
     const local = { memory : [] };
     let datas = JSON.parse(setHistory()).memory || local.memory;
     
@@ -155,7 +156,7 @@ function saveResultsMemory(path, result){
 
         local.memory = datas;
         setHistory(JSON.stringify(local));
-        updateHistoryList(local.memory, query('.history', false))
+        updateHistoryList(local.memory, query('.h-list', false))
     }
 }
 
@@ -209,38 +210,23 @@ function setOperationMethods(btn){
 
 }
 
-function setExtraOptions(option, output, miniInfo){
-    const cleanResult = innerHtml(output, false);
-    const clearMiniInfo = innerHtml(miniInfo, false);
-
+function setExtraOptions(option){
     switch(option){
         case 'C':
             clearMemoryAll('value', 'value2', 'method'); 
-            cleanResult('0', true);
-            clearMiniInfo('', true);
+            updateDisplayOutput('0', true);
+            updateMiniInfo('', true);
         break;
         case 'CE':
             clearMemoryAll('value');
 
             if(operation() === '0'){
-                clearMiniInfo('', true);
+                updateMiniInfo('', true);
             }
 
-            cleanResult('0', true);
+            updateDisplayOutput('0', true)
         break;
     }
-}
-
-// Listen cliks on buttons
-function listenClickButton(buttonsHtml, action, ...rest){
-    const buttons = [...buttonsHtml];
-
-    buttons.map((btn) =>{
-        btn.addEventListener('click', (event) => {
-            const innerButtons = innerHtml(event.target);
-            action(innerButtons, ...rest);
-        })
-    })
 }
 
 // clean localStorage 
@@ -252,41 +238,61 @@ function clearMemoryAll(...local){
     local.map(clearMemory);
 }
 
-// when starting clean the localStorage
-clearMemoryAll('value', 'value2', 'method', 'history');
-
 // Clicks on buttons 
 (function (){
-    const output = query('.output', false);
-    const miniInfo = query('.info-display', false);
+    ['btn-number', 'btn-options', 'btn-extra', 'memory']
+    .map((btns, mode) => {
+        query("." + btns + ' li').map(btn => {
 
-    ['.btn-number', '.btn-options', '.btn-extra', '.memory']
-    .map((btn, index) => {
-        const buttons = query(btn + ' li');
-        
-        switch(index){
-            case 0:
-                listenClickButton(buttons, insertNumber, output, miniInfo);
-                break
-            case 1:
-                listenClickButton(buttons, setOperationMethods, output, miniInfo);
-                break;
-            case 2: 
-                listenClickButton(buttons, setExtraOptions, output, miniInfo);
-                break;
-            case 3:
-                listenClickButton(buttons, insertNumber);
-            break;
-        }
+            btn.addEventListener('click', (event) => {
+                const button = innerHtml(event.target);
+
+                switch(mode){
+                    case 0:
+                        insertNumber(button)
+                        break
+                    case 1:
+                        setOperationMethods(button)
+                        break;
+                    case 2: 
+                        setExtraOptions(button)
+                        break;
+                    case 3:
+                        insertNumber(button)
+                    break;
+                    default:
+                        console.log('no button')
+                    break;
+                }
+            })
+        })
     })
 })()
 
 
 // show and hide history
-!function handleCloseMemory(){
-    const container = query('.history', false);
-    const btnHistory = query('.t-history', false);
+!function handleListHistory(){
+    const container = query('.history');
+    const list = query('.h-list');
+    const activeHistory = 'history-active';
     
-    btnHistory.addEventListener('click', () => 
-    container.classList.toggle('history-active'))
+    query('.t-history').addEventListener('click', () => {
+        container.classList.add(activeHistory);
+    })
+
+    container.addEventListener('click', (e) => {
+        e.target.classList.remove(activeHistory);
+    })
+
+    list.addEventListener('click', (e) => {
+        if(e.target !== list) container.classList.remove(activeHistory);
+    })
+
+    query('.h-clean').addEventListener('click', (e) => {
+        setHistory('0')
+        innerHtml(list, false)('<span>Ainda não há histórico</span>', true)
+    })
 }()
+
+// when starting clean the localStorage
+clearMemoryAll('value', 'value2', 'method', 'history');
