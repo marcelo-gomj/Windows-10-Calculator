@@ -52,7 +52,7 @@ function addItemMemory(digit, value){
 
 // add points in numbers
 function updateDisplayOutput(value){
-    const output = query('.output', false);
+    const output = query('.output');
     const valors = value.split('.');
     const integer = Intl.NumberFormat().format(valors[0]);
     const float = (valors.length > 1 ? ',' + valors[1] : '');
@@ -99,10 +99,10 @@ function calcOperation(){
 }
 
 // insert numbers 
-function insertNumber(btn, output, miniInfo){
+function insertNumber(btn){
     if(operation() === '='){
         clearMemoryAll('value', 'value2', 'method')
-        innerHtml(miniInfo, false)('', true)
+        updateMiniInfo('', true);
     }
 
     const value = firstValue();
@@ -156,7 +156,7 @@ function saveResultsMemory(path, result){
 
         local.memory = datas;
         setHistory(JSON.stringify(local));
-        updateHistoryList(local.memory, query('.h-list', false))
+        updateHistoryList(local.memory, query('.h-list', false));
     }
 }
 
@@ -210,6 +210,19 @@ function setOperationMethods(btn){
 
 }
 
+function calcPercentage(){
+    const baseNumber = secondValue();
+    const percentage = firstValue();
+
+    if(baseNumber){
+        const val = String((baseNumber / 100) * percentage);
+        firstValue(val);
+
+        updateDisplayOutput(val, true)
+        updateMiniInfo(val, false)
+    }
+}
+
 function setExtraOptions(option){
     switch(option){
         case 'C':
@@ -224,7 +237,13 @@ function setExtraOptions(option){
                 updateMiniInfo('', true);
             }
 
-            updateDisplayOutput('0', true)
+            updateDisplayOutput('0', true);
+        break;
+        case '%':
+            calcPercentage()
+        break;
+        default:
+            console.log('other operation')
         break;
     }
 }
@@ -289,7 +308,7 @@ function clearMemoryAll(...local){
     })
 
     query('.h-clean').addEventListener('click', (e) => {
-        setHistory('0')
+        setHistory('0');
         innerHtml(list, false)('<span>Ainda não há histórico</span>', true)
     })
 }()
