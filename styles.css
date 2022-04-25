@@ -234,19 +234,44 @@ header{
 
 .history{
     display: none;
-    background: rgb(31, 31, 31);
-    height: 62%;
+    background: rgb(0, 0, 0, 0.6);
+    height: 100%;
     width: 100%;
     position: absolute;
     bottom: 0;
     left: 0;
 
     flex-direction: column;
-    overflow-y: scroll;
-    padding: 4% 2%;
+    justify-content: flex-end;
 }
 
-.history li{
+.h-list{
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    background: var(--color-normal);
+    width: 100%;
+    height: 55%;
+}
+
+.h-list:empty{
+    content: "Ainda não há histórico";
+    color: white;
+}
+
+.h-list::-webkit-scrollbar-track{
+    background: var(--color-normal);
+}
+
+.h-list::-webkit-scrollbar{
+    width: 10px;
+}
+
+.h-list::-webkit-scrollbar-thumb{
+    background: var(--color-active);
+}
+
+.h-list li{
     background: var(--color-normal);
     text-align: right;
     font-size: 0.9rem;
@@ -255,17 +280,29 @@ header{
     color: silver;
 }
 
-.history div{
+.h-list div{
     color: white!important;
     font-weight: 500!important;
     font-size: 1.1rem;
     padding-top: 1.2%;
 }
 
-.history li:hover{
+.h-list li:hover{
     background: var(--color-hover);
+}
+
+.h-list span{
+    padding: 2.5% 5%;
 }
 
 .history-active{
     display: flex;
+}
+
+.h-clean{
+    bottom: 0%;
+    right: 0%;
+    background: var(--color-normal);
+    text-align: end;
+    padding: 2%;
 }
